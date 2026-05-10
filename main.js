@@ -1,6 +1,6 @@
 // ====== 設定 ======
 // ここにGASでデプロイしたWebアプリのURLを貼り付けてください
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbxMP5Fqp0LCOXZQUabtxT7Q4RXx4VQzv_ipGwpxyGNgd052008rQ6jPjNyLc4pcZsFUIw/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbwJJf-AdBF2_YDN-ZRWszY8J2BYRJyOuNkIdCOkByP0OFc1Yp5eoClsuo_0iiOeuvuEyA/exec';
 
 // ====== DOM要素 ======
 const balanceEl = document.getElementById('total-balance');
