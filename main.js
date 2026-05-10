@@ -243,7 +243,7 @@ async function deleteTransaction(id) {
 
 // ====== ユーティリティ ======
 function formatMoney(number) {
-    return '¥' + number.toLocaleString('ja-JP');
+    return '¥ ' + number.toLocaleString('ja-JP');
 }
 
 function generateID() {
@@ -258,11 +258,12 @@ function addTransactionDOM(transaction) {
 
     const memoHtml = transaction.memo ? ` <span class="memo">(${transaction.memo})</span>` : '';
     const displayTitle = transaction.title ? transaction.title : '名称なし';
+    const displayDate = typeof transaction.date === 'string' ? transaction.date.split('T')[0] : transaction.date;
 
     item.innerHTML = `
         <div class="item-info">
             <span class="item-category">${displayTitle}</span>
-            <span class="item-date-memo">${transaction.date} | ${transaction.category}${memoHtml}</span>
+            <span class="item-date-memo">${displayDate} | ${transaction.category}${memoHtml}</span>
         </div>
         <div class="item-amount ${transaction.type}">
             ${sign}${formatMoney(transaction.amount)}
