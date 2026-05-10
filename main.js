@@ -323,10 +323,24 @@ function drawCharts(monthTransactions) {
         }
     };
 
-    const colorPalette = [
-        '#6366f1', '#8b5cf6', '#ec4899', '#f43f5e', '#f97316',
-        '#eab308', '#84cc16', '#10b981', '#06b6d4', '#0ea5e9', '#d946ef'
-    ];
+    const colorMap = {
+        '食費': '#f43f5e',       // Rose
+        '日用品': '#06b6d4',      // Cyan
+        '交通費': '#84cc16',      // Lime
+        '健康・医療': '#10b981',    // Emerald
+        '趣味・娯楽': '#8b5cf6',    // Purple
+        '衣服・美容': '#ec4899',    // Pink
+        '交際費': '#f97316',      // Orange
+        '水道・光熱費': '#eab308',   // Yellow
+        '通信費': '#0ea5e9',      // Sky Blue
+        '教育': '#6366f1',       // Indigo
+        'カテゴリーなし': '#475569', // Slate
+        'その他': '#94a3b8'       // Slate light
+    };
+
+    const getColors = (dataObj) => {
+        return Object.keys(dataObj).map(category => colorMap[category] || '#d946ef');
+    };
 
     if (incomeChartInstance) incomeChartInstance.destroy();
     incomeChartInstance = new Chart(incomeCtx, {
@@ -335,7 +349,7 @@ function drawCharts(monthTransactions) {
             labels: Object.keys(incomeData).length > 0 ? Object.keys(incomeData) : ['データなし'],
             datasets: [{
                 data: Object.keys(incomeData).length > 0 ? Object.values(incomeData) : [1],
-                backgroundColor: Object.keys(incomeData).length > 0 ? colorPalette : ['rgba(255,255,255,0.1)'],
+                backgroundColor: Object.keys(incomeData).length > 0 ? getColors(incomeData) : ['rgba(255,255,255,0.1)'],
                 borderWidth: 0
             }]
         },
@@ -349,7 +363,7 @@ function drawCharts(monthTransactions) {
             labels: Object.keys(expenseData).length > 0 ? Object.keys(expenseData) : ['データなし'],
             datasets: [{
                 data: Object.keys(expenseData).length > 0 ? Object.values(expenseData) : [1],
-                backgroundColor: Object.keys(expenseData).length > 0 ? colorPalette : ['rgba(255,255,255,0.1)'],
+                backgroundColor: Object.keys(expenseData).length > 0 ? getColors(expenseData) : ['rgba(255,255,255,0.1)'],
                 borderWidth: 0
             }]
         },
