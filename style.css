@@ -425,12 +425,12 @@ input:focus, select:focus {
     gap: 0.3rem;
 }
 
-.list .item-category {
+.list .item-date-category {
     font-weight: 500;
     font-size: 1.05rem;
 }
 
-.list .item-date-memo {
+.list .item-title-memo {
     font-size: 0.85rem;
     color: var(--text-secondary);
     display: flex;
@@ -503,6 +503,7 @@ input:focus, select:focus {
 .icon-btn {
     background: transparent;
     border: none;
+    color: var(--text-primary);
     font-size: 1.5rem;
     cursor: pointer;
     transition: transform 0.2s;

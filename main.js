@@ -140,22 +140,68 @@ function updateMonthDisplay() {
 }
 
 // ====== スワイプ処理 (ダッシュボード) ======
+const dashboardEl = document.querySelector('.dashboard');
 let touchStartX = 0;
-let touchEndX = 0;
+let currentX = 0;
+let isDragging = false;
 
-document.querySelector('.dashboard').addEventListener('touchstart', e => {
-    touchStartX = e.changedTouches[0].screenX;
+dashboardEl.addEventListener('touchstart', e => {
+    touchStartX = e.touches[0].clientX;
+    currentX = touchStartX;
+    isDragging = true;
+    dashboardEl.style.transition = 'none';
 });
 
-document.querySelector('.dashboard').addEventListener('touchend', e => {
-    touchEndX = e.changedTouches[0].screenX;
-    handleSwipe(touchStartX, touchEndX, () => prevMonthBtn.click(), () => nextMonthBtn.click());
+dashboardEl.addEventListener('touchmove', e => {
+    if (!isDragging) return;
+    currentX = e.touches[0].clientX;
+    const diff = currentX - touchStartX;
+    dashboardEl.style.transform = `translateX(${diff}px)`;
 });
 
+dashboardEl.addEventListener('touchend', e => {
+    if (!isDragging) return;
+    isDragging = false;
+    const diff = currentX - touchStartX;
+    dashboardEl.style.transition = 'transform 0.3s ease';
+
+    const threshold = 60; // スワイプと判定する最低距離(px)
+
+    if (diff < -threshold) {
+        // 左へスワイプ (翌月)
+        dashboardEl.style.transform = `translateX(-100%)`;
+        setTimeout(() => {
+            nextMonthBtn.click();
+            dashboardEl.style.transition = 'none';
+            dashboardEl.style.transform = `translateX(100%)`;
+            // 強制リフロー
+            dashboardEl.offsetHeight;
+            dashboardEl.style.transition = 'transform 0.3s ease';
+            dashboardEl.style.transform = `translateX(0)`;
+        }, 300);
+    } else if (diff > threshold) {
+        // 右へスワイプ (先月)
+        dashboardEl.style.transform = `translateX(100%)`;
+        setTimeout(() => {
+            prevMonthBtn.click();
+            dashboardEl.style.transition = 'none';
+            dashboardEl.style.transform = `translateX(-100%)`;
+            // 強制リフロー
+            dashboardEl.offsetHeight;
+            dashboardEl.style.transition = 'transform 0.3s ease';
+            dashboardEl.style.transform = `translateX(0)`;
+        }, 300);
+    } else {
+        // 元に戻す
+        dashboardEl.style.transform = `translateX(0)`;
+    }
+});
+
+// カレンダー用スワイプ判定
 function handleSwipe(start, end, onRightSwipe, onLeftSwipe) {
-    const threshold = 50; // スワイプと判定する最低距離(px)
-    if (end < start - threshold) onLeftSwipe(); // 左へスワイプ (翌月)
-    if (end > start + threshold) onRightSwipe(); // 右へスワイプ (先月)
+    const threshold = 50;
+    if (end < start - threshold) onLeftSwipe();
+    if (end > start + threshold) onRightSwipe();
 }
 
 // ====== 描画処理 ======
@@ -291,19 +337,21 @@ function addTransactionDOM(transaction) {
 
     item.classList.add(transaction.type);
 
-    const memoHtml = transaction.memo ? ` <span class="memo">(${transaction.memo})</span>` : '';
-    const displayTitle = transaction.title ? transaction.title : '名称なし';
-
     // 日付と曜日の取得
     const dateObj = new Date(transaction.date);
     const dayOfWeek = ['日', '月', '火', '水', '木', '金', '土'][dateObj.getDay()];
     const displayDate = typeof transaction.date === 'string' ? transaction.date.split('T')[0] : transaction.date;
     const dateWithDay = `${displayDate} (${dayOfWeek})`;
 
+    // メモとタイトルを結合
+    const memoText = transaction.memo ? `(${transaction.memo})` : '';
+    const titleText = transaction.title ? transaction.title : '';
+    const titleAndMemo = [titleText, memoText].filter(Boolean).join(' ');
+
     item.innerHTML = `
         <div class="item-info">
-            <span class="item-category">${displayTitle}</span>
-            <span class="item-date-memo">${dateWithDay} | ${transaction.category}${memoHtml}</span>
+            <span class="item-date-category">${dateWithDay} | ${transaction.category}</span>
+            <span class="item-title-memo">${titleAndMemo}</span>
         </div>
         <div class="item-amount ${transaction.type}">
             ${sign}${formatMoney(transaction.amount)}
@@ -544,13 +592,14 @@ function showDateDetails(year, month, day) {
             const sign = t.type === 'income' ? '+' : '-';
             const item = document.createElement('li');
             item.classList.add(t.type);
-            const memoHtml = t.memo ? ` <span class="memo">(${t.memo})</span>` : '';
-            const displayTitle = t.title ? t.title : '名称なし';
+            const memoText = t.memo ? `(${t.memo})` : '';
+            const titleText = t.title ? t.title : '';
+            const titleAndMemo = [titleText, memoText].filter(Boolean).join(' ');
 
             item.innerHTML = `
                 <div class="item-info">
-                    <span class="item-category">${displayTitle}</span>
-                    <span class="item-date-memo">${t.category}${memoHtml}</span>
+                    <span class="item-date-category">${t.category}</span>
+                    <span class="item-title-memo">${titleAndMemo}</span>
                 </div>
                 <div class="item-amount ${t.type}">
                     ${sign}${formatMoney(t.amount)}
