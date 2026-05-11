@@ -425,17 +425,24 @@ input:focus, select:focus {
     gap: 0.3rem;
 }
 
-.list .item-date-category {
+.list .item-title {
     font-weight: 500;
     font-size: 1.05rem;
 }
 
-.list .item-title-memo {
+.list .item-date-category {
     font-size: 0.85rem;
     color: var(--text-secondary);
-    display: flex;
-    gap: 0.5rem;
-    align-items: center;
+}
+
+.list .item-memo {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    background: rgba(255, 255, 255, 0.05);
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    margin-top: 0.2rem;
+    display: inline-block;
 }
 
 .list .item-amount {

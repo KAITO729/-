@@ -343,15 +343,14 @@ function addTransactionDOM(transaction) {
     const displayDate = typeof transaction.date === 'string' ? transaction.date.split('T')[0] : transaction.date;
     const dateWithDay = `${displayDate} (${dayOfWeek})`;
 
-    // メモとタイトルを結合
-    const memoText = transaction.memo ? `(${transaction.memo})` : '';
-    const titleText = transaction.title ? transaction.title : '';
-    const titleAndMemo = [titleText, memoText].filter(Boolean).join(' ');
+    const displayTitle = transaction.title ? transaction.title : '名称なし';
+    const memoHtml = transaction.memo ? `<span class="item-memo">${transaction.memo}</span>` : '';
 
     item.innerHTML = `
         <div class="item-info">
+            <span class="item-title">${displayTitle}</span>
             <span class="item-date-category">${dateWithDay} | ${transaction.category}</span>
-            <span class="item-title-memo">${titleAndMemo}</span>
+            ${memoHtml}
         </div>
         <div class="item-amount ${transaction.type}">
             ${sign}${formatMoney(transaction.amount)}
@@ -592,14 +591,14 @@ function showDateDetails(year, month, day) {
             const sign = t.type === 'income' ? '+' : '-';
             const item = document.createElement('li');
             item.classList.add(t.type);
-            const memoText = t.memo ? `(${t.memo})` : '';
-            const titleText = t.title ? t.title : '';
-            const titleAndMemo = [titleText, memoText].filter(Boolean).join(' ');
+            const displayTitle = t.title ? t.title : '名称なし';
+            const memoHtml = t.memo ? `<span class="item-memo">${t.memo}</span>` : '';
 
             item.innerHTML = `
                 <div class="item-info">
+                    <span class="item-title">${displayTitle}</span>
                     <span class="item-date-category">${t.category}</span>
-                    <span class="item-title-memo">${titleAndMemo}</span>
+                    ${memoHtml}
                 </div>
                 <div class="item-amount ${t.type}">
                     ${sign}${formatMoney(t.amount)}
