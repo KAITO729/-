@@ -437,6 +437,7 @@ function drawCharts(monthTransactions) {
     // Chart.js Default Font
     Chart.defaults.color = '#f8fafc';
     Chart.defaults.font.family = "'Outfit', sans-serif";
+    Chart.register(ChartDataLabels);
 
     const commonOptions = {
         responsive: true,
@@ -445,6 +446,28 @@ function drawCharts(monthTransactions) {
             legend: {
                 position: 'right',
                 labels: { boxWidth: 12, font: { size: 10 }, color: '#f8fafc' }
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        if (context.parsed !== null) {
+                            return context.parsed.toLocaleString('ja-JP') + '円';
+                        }
+                        return '';
+                    }
+                }
+            },
+            datalabels: {
+                color: '#ffffff',
+                formatter: (value, ctx) => {
+                    let sum = 0;
+                    let dataArr = ctx.chart.data.datasets[0].data;
+                    dataArr.map(data => { sum += data; });
+                    if (sum === 0) return '';
+                    let percentage = (value * 100 / sum);
+                    return percentage < 5 ? '' : percentage.toFixed(1) + "%";
+                },
+                font: { weight: 'bold', size: 10 }
             }
         }
     };
@@ -476,7 +499,8 @@ function drawCharts(monthTransactions) {
             datasets: [{
                 data: Object.keys(incomeData).length > 0 ? Object.values(incomeData) : [1],
                 backgroundColor: Object.keys(incomeData).length > 0 ? getColors(incomeData) : ['rgba(255,255,255,0.1)'],
-                borderWidth: 0
+                borderWidth: 2,
+                borderColor: '#0f172a'
             }]
         },
         options: commonOptions
@@ -490,7 +514,8 @@ function drawCharts(monthTransactions) {
             datasets: [{
                 data: Object.keys(expenseData).length > 0 ? Object.values(expenseData) : [1],
                 backgroundColor: Object.keys(expenseData).length > 0 ? getColors(expenseData) : ['rgba(255,255,255,0.1)'],
-                borderWidth: 0
+                borderWidth: 2,
+                borderColor: '#0f172a'
             }]
         },
         options: commonOptions
@@ -523,21 +548,21 @@ calendarModal.addEventListener('click', (e) => {
 
 // カレンダー内の月移動
 calPrevBtn.addEventListener('click', () => {
-    animateSwipe(document.getElementById('calendar-grid'), 'right', () => {
+    animateSwipe(document.getElementById('calendar-swipe-wrapper'), 'right', () => {
         calendarDisplayedMonth.setMonth(calendarDisplayedMonth.getMonth() - 1);
         renderCalendar();
     });
 });
 
 calNextBtn.addEventListener('click', () => {
-    animateSwipe(document.getElementById('calendar-grid'), 'left', () => {
+    animateSwipe(document.getElementById('calendar-swipe-wrapper'), 'left', () => {
         calendarDisplayedMonth.setMonth(calendarDisplayedMonth.getMonth() + 1);
         renderCalendar();
     });
 });
 
 // カレンダーのスワイプ移動
-setupSwipeable(document.getElementById('calendar-grid'),
+setupSwipeable(document.getElementById('calendar-swipe-wrapper'),
     () => { calendarDisplayedMonth.setMonth(calendarDisplayedMonth.getMonth() + 1); renderCalendar(); },
     () => { calendarDisplayedMonth.setMonth(calendarDisplayedMonth.getMonth() - 1); renderCalendar(); }
 );
@@ -571,7 +596,7 @@ function renderCalendar() {
         }
     });
 
-    // 空白セル
+    // 空白セル(月初め)
     for (let i = 0; i < firstDay; i++) {
         const cell = document.createElement('div');
         cell.classList.add('cal-cell', 'empty');

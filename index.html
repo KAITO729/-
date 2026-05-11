@@ -9,6 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
 </head>
 <body>
     <div class="background-blobs">
@@ -143,11 +144,13 @@
                 <button id="cal-next" class="nav-btn">&gt;</button>
                 <button id="close-calendar" class="close-btn">&times;</button>
             </div>
-            <div class="calendar-grid-header">
-                <div>日</div><div>月</div><div>火</div><div>水</div><div>木</div><div>金</div><div>土</div>
-            </div>
-            <div class="calendar-grid" id="calendar-grid">
-                <!-- 日付マスがここに生成される -->
+            <div id="calendar-swipe-wrapper">
+                <div class="calendar-grid-header">
+                    <div>日</div><div>月</div><div>火</div><div>水</div><div>木</div><div>金</div><div>土</div>
+                </div>
+                <div class="calendar-grid" id="calendar-grid">
+                    <!-- 日付マスがここに生成される -->
+                </div>
             </div>
         </div>
     </div>

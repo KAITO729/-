@@ -537,7 +537,8 @@ input:focus, select:focus {
     background: rgba(0, 0, 0, 0.6);
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: flex-start;
+    padding-top: 10vh;
     z-index: 1000;
     backdrop-filter: blur(5px);
     opacity: 1;
