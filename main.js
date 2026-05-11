@@ -114,15 +114,19 @@ async function deleteTransactionApi(id) {
 
 // ====== 月のナビゲーション ======
 prevMonthBtn.addEventListener('click', () => {
-    displayedMonth.setMonth(displayedMonth.getMonth() - 1);
-    updateMonthDisplay();
-    render();
+    animateSwipe(document.querySelector('.dashboard'), 'right', () => {
+        displayedMonth.setMonth(displayedMonth.getMonth() - 1);
+        updateMonthDisplay();
+        render();
+    });
 });
 
 nextMonthBtn.addEventListener('click', () => {
-    displayedMonth.setMonth(displayedMonth.getMonth() + 1);
-    updateMonthDisplay();
-    render();
+    animateSwipe(document.querySelector('.dashboard'), 'left', () => {
+        displayedMonth.setMonth(displayedMonth.getMonth() + 1);
+        updateMonthDisplay();
+        render();
+    });
 });
 
 monthSelector.addEventListener('change', (e) => {
@@ -139,70 +143,103 @@ function updateMonthDisplay() {
     monthSelector.value = `${year}-${month}`;
 }
 
-// ====== スワイプ処理 (ダッシュボード) ======
-const dashboardEl = document.querySelector('.dashboard');
-let touchStartX = 0;
-let currentX = 0;
-let isDragging = false;
+// ====== スワイプ＆アニメーション処理 ======
+let isAnimating = false;
 
-dashboardEl.addEventListener('touchstart', e => {
-    touchStartX = e.touches[0].clientX;
-    currentX = touchStartX;
-    isDragging = true;
-    dashboardEl.style.transition = 'none';
-});
+function animateSwipe(element, direction, onComplete) {
+    if (isAnimating) return;
+    isAnimating = true;
 
-dashboardEl.addEventListener('touchmove', e => {
-    if (!isDragging) return;
-    currentX = e.touches[0].clientX;
-    const diff = currentX - touchStartX;
-    dashboardEl.style.transform = `translateX(${diff}px)`;
-});
+    const translateEnd = direction === 'left' ? '-100%' : '100%';
+    const translateStart = direction === 'left' ? '100%' : '-100%';
 
-dashboardEl.addEventListener('touchend', e => {
-    if (!isDragging) return;
-    isDragging = false;
-    const diff = currentX - touchStartX;
-    dashboardEl.style.transition = 'transform 0.3s ease';
+    element.style.transition = 'transform 0.3s ease';
+    element.style.transform = `translateX(${translateEnd})`;
 
-    const threshold = 60; // スワイプと判定する最低距離(px)
-
-    if (diff < -threshold) {
-        // 左へスワイプ (翌月)
-        dashboardEl.style.transform = `translateX(-100%)`;
+    setTimeout(() => {
+        onComplete();
+        element.style.transition = 'none';
+        element.style.transform = `translateX(${translateStart})`;
+        element.offsetHeight; // force reflow
+        element.style.transition = 'transform 0.3s ease';
+        element.style.transform = `translateX(0)`;
+        
         setTimeout(() => {
-            nextMonthBtn.click();
-            dashboardEl.style.transition = 'none';
-            dashboardEl.style.transform = `translateX(100%)`;
-            // 強制リフロー
-            dashboardEl.offsetHeight;
-            dashboardEl.style.transition = 'transform 0.3s ease';
-            dashboardEl.style.transform = `translateX(0)`;
+            isAnimating = false;
         }, 300);
-    } else if (diff > threshold) {
-        // 右へスワイプ (先月)
-        dashboardEl.style.transform = `translateX(100%)`;
-        setTimeout(() => {
-            prevMonthBtn.click();
-            dashboardEl.style.transition = 'none';
-            dashboardEl.style.transform = `translateX(-100%)`;
-            // 強制リフロー
-            dashboardEl.offsetHeight;
-            dashboardEl.style.transition = 'transform 0.3s ease';
-            dashboardEl.style.transform = `translateX(0)`;
-        }, 300);
-    } else {
-        // 元に戻す
-        dashboardEl.style.transform = `translateX(0)`;
-    }
-});
-
-// カレンダー用スワイプ判定
-function handleSwipe(start, end, onRightSwipe, onLeftSwipe) {
-    const threshold = 50;
-    if (end < start - threshold) onLeftSwipe();
-    if (end > start + threshold) onRightSwipe();
+    }, 300);
 }
+
+function setupSwipeable(element, onSwipeLeft, onSwipeRight) {
+    let startX = 0;
+    let startY = 0;
+    let currentX = 0;
+    let isDragging = false;
+    let isHorizontal = null;
+
+    element.addEventListener('touchstart', e => {
+        if (isAnimating) return;
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+        currentX = startX;
+        isDragging = true;
+        isHorizontal = null;
+        element.style.transition = 'none';
+    });
+
+    element.addEventListener('touchmove', e => {
+        if (!isDragging || isAnimating) return;
+        
+        const moveX = e.touches[0].clientX;
+        const moveY = e.touches[0].clientY;
+        const diffX = moveX - startX;
+        const diffY = moveY - startY;
+
+        if (isHorizontal === null) {
+            if (Math.abs(diffX) > Math.abs(diffY)) {
+                isHorizontal = true;
+                e.preventDefault(); 
+            } else {
+                isHorizontal = false;
+            }
+        }
+
+        if (isHorizontal) {
+            currentX = moveX;
+            let visualDiff = 0;
+            if (Math.abs(diffX) > 20) {
+                visualDiff = diffX > 0 ? diffX - 20 : diffX + 20;
+                element.style.transform = `translateX(${visualDiff}px)`;
+            }
+        }
+    }, { passive: false });
+
+    element.addEventListener('touchend', e => {
+        if (!isDragging || isAnimating || !isHorizontal) {
+            isDragging = false;
+            return;
+        }
+        isDragging = false;
+        const diffX = currentX - startX;
+        const threshold = 60;
+
+        if (diffX < -threshold) {
+            animateSwipe(element, 'left', onSwipeLeft);
+        } else if (diffX > threshold) {
+            animateSwipe(element, 'right', onSwipeRight);
+        } else {
+            element.style.transition = 'transform 0.3s ease';
+            element.style.transform = `translateX(0)`;
+        }
+    });
+}
+
+// ダッシュボードのスワイプ
+const dashboardEl = document.querySelector('.dashboard');
+setupSwipeable(dashboardEl, 
+    () => { displayedMonth.setMonth(displayedMonth.getMonth() + 1); updateMonthDisplay(); render(); },
+    () => { displayedMonth.setMonth(displayedMonth.getMonth() - 1); updateMonthDisplay(); render(); }
+);
 
 // ====== 描画処理 ======
 function render() {
@@ -341,7 +378,8 @@ function addTransactionDOM(transaction) {
     const dateObj = new Date(transaction.date);
     const dayOfWeek = ['日', '月', '火', '水', '木', '金', '土'][dateObj.getDay()];
     const displayDate = typeof transaction.date === 'string' ? transaction.date.split('T')[0] : transaction.date;
-    const dateWithDay = `${displayDate} (${dayOfWeek})`;
+    const formattedDate = displayDate.replace(/-/g, '/');
+    const dateWithDayAndCategory = `${formattedDate} (${dayOfWeek}) ${transaction.category}`;
 
     const displayTitle = transaction.title ? transaction.title : '名称なし';
     const memoHtml = transaction.memo ? `<span class="item-memo">${transaction.memo}</span>` : '';
@@ -349,7 +387,7 @@ function addTransactionDOM(transaction) {
     item.innerHTML = `
         <div class="item-info">
             <span class="item-title">${displayTitle}</span>
-            <span class="item-date-category">${dateWithDay} | ${transaction.category}</span>
+            <span class="item-date-category">${dateWithDayAndCategory}</span>
             ${memoHtml}
         </div>
         <div class="item-amount ${transaction.type}">
@@ -484,25 +522,24 @@ calendarModal.addEventListener('click', (e) => {
 
 // カレンダー内の月移動
 calPrevBtn.addEventListener('click', () => {
-    calendarDisplayedMonth.setMonth(calendarDisplayedMonth.getMonth() - 1);
-    renderCalendar();
+    animateSwipe(calendarModal.querySelector('.modal-content'), 'right', () => {
+        calendarDisplayedMonth.setMonth(calendarDisplayedMonth.getMonth() - 1);
+        renderCalendar();
+    });
 });
 
 calNextBtn.addEventListener('click', () => {
-    calendarDisplayedMonth.setMonth(calendarDisplayedMonth.getMonth() + 1);
-    renderCalendar();
+    animateSwipe(calendarModal.querySelector('.modal-content'), 'left', () => {
+        calendarDisplayedMonth.setMonth(calendarDisplayedMonth.getMonth() + 1);
+        renderCalendar();
+    });
 });
 
 // カレンダーのスワイプ移動
-let calTouchStartX = 0;
-let calTouchEndX = 0;
-calendarModal.querySelector('.modal-content').addEventListener('touchstart', e => {
-    calTouchStartX = e.changedTouches[0].screenX;
-});
-calendarModal.querySelector('.modal-content').addEventListener('touchend', e => {
-    calTouchEndX = e.changedTouches[0].screenX;
-    handleSwipe(calTouchStartX, calTouchEndX, () => calPrevBtn.click(), () => calNextBtn.click());
-});
+setupSwipeable(calendarModal.querySelector('.modal-content'),
+    () => { calendarDisplayedMonth.setMonth(calendarDisplayedMonth.getMonth() + 1); renderCalendar(); },
+    () => { calendarDisplayedMonth.setMonth(calendarDisplayedMonth.getMonth() - 1); renderCalendar(); }
+);
 
 // 詳細モーダルを閉じる
 closeDetailsBtn.addEventListener('click', () => detailsModal.classList.add('hidden'));

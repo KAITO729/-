@@ -403,7 +403,7 @@ input:focus, select:focus {
     padding: 1rem;
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
     margin-bottom: 0.8rem;
     transition: transform 0.2s, background 0.2s;
     animation: slideIn 0.3s ease forwards;
@@ -423,11 +423,15 @@ input:focus, select:focus {
     display: flex;
     flex-direction: column;
     gap: 0.3rem;
+    flex: 1;
+    min-width: 0;
+    margin-right: 1rem;
 }
 
 .list .item-title {
     font-weight: 500;
     font-size: 1.05rem;
+    word-break: break-all;
 }
 
 .list .item-date-category {
@@ -443,6 +447,7 @@ input:focus, select:focus {
     border-radius: 4px;
     margin-top: 0.2rem;
     display: inline-block;
+    word-break: break-all;
 }
 
 .list .item-amount {
@@ -451,6 +456,8 @@ input:focus, select:focus {
     display: flex;
     align-items: center;
     gap: 1rem;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .list .item-amount.income { color: var(--income-color); }
