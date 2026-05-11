@@ -293,12 +293,17 @@ function addTransactionDOM(transaction) {
 
     const memoHtml = transaction.memo ? ` <span class="memo">(${transaction.memo})</span>` : '';
     const displayTitle = transaction.title ? transaction.title : '名称なし';
+
+    // 日付と曜日の取得
+    const dateObj = new Date(transaction.date);
+    const dayOfWeek = ['日', '月', '火', '水', '木', '金', '土'][dateObj.getDay()];
     const displayDate = typeof transaction.date === 'string' ? transaction.date.split('T')[0] : transaction.date;
+    const dateWithDay = `${displayDate} (${dayOfWeek})`;
 
     item.innerHTML = `
         <div class="item-info">
             <span class="item-category">${displayTitle}</span>
-            <span class="item-date-memo">${displayDate} | ${transaction.category}${memoHtml}</span>
+            <span class="item-date-memo">${dateWithDay} | ${transaction.category}${memoHtml}</span>
         </div>
         <div class="item-amount ${transaction.type}">
             ${sign}${formatMoney(transaction.amount)}
@@ -492,7 +497,7 @@ function renderCalendar() {
     for (let day = 1; day <= daysInMonth; day++) {
         const cell = document.createElement('div');
         cell.classList.add('cal-cell');
-        
+
         let summaryHtml = '';
         if (dailyData[day]) {
             if (dailyData[day].income > 0) summaryHtml += `<div class="cal-inc">+${dailyData[day].income.toLocaleString()}</div>`;
@@ -515,8 +520,10 @@ function renderCalendar() {
 }
 
 function showDateDetails(year, month, day) {
-    detailsDateTitle.innerText = `${year}年${month}月${day}日`;
-    
+    const dateObj = new Date(year, month - 1, day);
+    const dayOfWeek = ['日', '月', '火', '水', '木', '金', '土'][dateObj.getDay()];
+    detailsDateTitle.innerText = `${year}年${month}月${day}日 (${dayOfWeek})`;
+
     // 対象日のデータを抽出（逆順なのでそのまま表示すれば最新が上）
     const targetTransactions = transactions.filter(t => {
         const d = new Date(t.date);
