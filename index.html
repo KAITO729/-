@@ -28,7 +28,10 @@
                 <button id="next-month" class="nav-btn">&gt;</button>
             </div>
             <div class="balance-card">
-                <h3>残高</h3>
+                <div class="balance-header">
+                    <h3>収支</h3>
+                    <button id="btn-calendar-balance" class="icon-btn" title="カレンダー表示">📅</button>
+                </div>
                 <p id="total-balance" class="amount">¥0</p>
             </div>
             <div class="summary-cards">
@@ -105,7 +108,10 @@
 
             <section class="transaction-list glass-panel">
                 <div class="list-header">
-                    <h2>取引履歴</h2>
+                    <div class="history-title">
+                        <h2>取引履歴</h2>
+                        <button id="btn-calendar-history" class="icon-btn" title="カレンダー表示">📅</button>
+                    </div>
                     <div class="filter-group">
                         <button class="filter-btn active" data-filter="all">すべて</button>
                         <button class="filter-btn" data-filter="income">収入</button>
@@ -121,6 +127,41 @@
             </section>
         </div>
     </main>
+
+    <!-- カレンダーモーダル -->
+    <div id="calendar-modal" class="modal hidden">
+        <div class="modal-content glass-panel calendar-modal-content">
+            <div class="modal-header">
+                <button id="cal-prev" class="nav-btn">&lt;</button>
+                <h2 id="cal-month-display">2026年5月</h2>
+                <button id="cal-next" class="nav-btn">&gt;</button>
+                <button id="close-calendar" class="close-btn">&times;</button>
+            </div>
+            <div class="calendar-grid-header">
+                <div>日</div><div>月</div><div>火</div><div>水</div><div>木</div><div>金</div><div>土</div>
+            </div>
+            <div class="calendar-grid" id="calendar-grid">
+                <!-- 日付マスがここに生成される -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 日付詳細モーダル -->
+    <div id="date-details-modal" class="modal hidden">
+        <div class="modal-content glass-panel details-modal-content">
+            <div class="modal-header">
+                <h2 id="details-date-title">2026年5月1日</h2>
+                <button id="close-details" class="close-btn">&times;</button>
+            </div>
+            <div class="details-summary">
+                <div class="summary-item income-text">収入: <span id="details-income">￥0</span></div>
+                <div class="summary-item expense-text">支出: <span id="details-expense">￥0</span></div>
+            </div>
+            <ul id="details-transaction-list" class="list">
+                <!-- 取引履歴がここに生成される -->
+            </ul>
+        </div>
+    </div>
 
     <script src="main.js"></script>
 </body>

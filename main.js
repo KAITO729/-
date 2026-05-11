@@ -20,6 +20,23 @@ const prevMonthBtn = document.getElementById('prev-month');
 const nextMonthBtn = document.getElementById('next-month');
 const monthSelector = document.getElementById('month-selector');
 
+const btnCalendarBalance = document.getElementById('btn-calendar-balance');
+const btnCalendarHistory = document.getElementById('btn-calendar-history');
+
+const calendarModal = document.getElementById('calendar-modal');
+const closeCalendarBtn = document.getElementById('close-calendar');
+const calPrevBtn = document.getElementById('cal-prev');
+const calNextBtn = document.getElementById('cal-next');
+const calMonthDisplay = document.getElementById('cal-month-display');
+const calendarGrid = document.getElementById('calendar-grid');
+
+const detailsModal = document.getElementById('date-details-modal');
+const closeDetailsBtn = document.getElementById('close-details');
+const detailsDateTitle = document.getElementById('details-date-title');
+const detailsIncome = document.getElementById('details-income');
+const detailsExpense = document.getElementById('details-expense');
+const detailsTransactionList = document.getElementById('details-transaction-list');
+
 // ====== 状態管理 ======
 let transactions = [];
 let currentFilter = 'all'; // 'all', 'income', 'expense'
@@ -51,8 +68,8 @@ async function fetchTransactions() {
         const response = await fetch(GAS_URL);
         const data = await response.json();
         transactions = data;
-        // 日付の降順（新しい順）にソート
-        transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+        // 追加された順（スプレッドシートの下から）の完全な逆順にする
+        transactions.reverse();
         render();
     } catch (error) {
         console.error('Error fetching data:', error);
@@ -120,6 +137,25 @@ function updateMonthDisplay() {
     const year = displayedMonth.getFullYear();
     const month = String(displayedMonth.getMonth() + 1).padStart(2, '0');
     monthSelector.value = `${year}-${month}`;
+}
+
+// ====== スワイプ処理 (ダッシュボード) ======
+let touchStartX = 0;
+let touchEndX = 0;
+
+document.querySelector('.dashboard').addEventListener('touchstart', e => {
+    touchStartX = e.changedTouches[0].screenX;
+});
+
+document.querySelector('.dashboard').addEventListener('touchend', e => {
+    touchEndX = e.changedTouches[0].screenX;
+    handleSwipe(touchStartX, touchEndX, () => prevMonthBtn.click(), () => nextMonthBtn.click());
+});
+
+function handleSwipe(start, end, onRightSwipe, onLeftSwipe) {
+    const threshold = 50; // スワイプと判定する最低距離(px)
+    if (end < start - threshold) onLeftSwipe(); // 左へスワイプ (翌月)
+    if (end > start + threshold) onRightSwipe(); // 右へスワイプ (先月)
 }
 
 // ====== 描画処理 ======
@@ -197,9 +233,8 @@ form.addEventListener('submit', async (e) => {
         memo
     };
 
-    // 一時的にローカルに追加して表示
-    transactions.push(transaction);
-    transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+    // 一時的にローカルに追加して表示 (一番上に追加)
+    transactions.unshift(transaction);
     render();
 
     // GASへ送信
@@ -369,4 +404,157 @@ function drawCharts(monthTransactions) {
         },
         options: commonOptions
     });
+}
+
+// ====== カレンダー＆詳細表示処理 ======
+let calendarDisplayedMonth = new Date();
+calendarDisplayedMonth.setDate(1);
+
+// カレンダーを開く
+btnCalendarBalance.addEventListener('click', () => {
+    calendarDisplayedMonth = new Date(displayedMonth);
+    renderCalendar();
+    calendarModal.classList.remove('hidden');
+});
+
+btnCalendarHistory.addEventListener('click', () => {
+    calendarDisplayedMonth = new Date();
+    calendarDisplayedMonth.setDate(1);
+    renderCalendar();
+    calendarModal.classList.remove('hidden');
+});
+
+// カレンダーを閉じる
+closeCalendarBtn.addEventListener('click', () => calendarModal.classList.add('hidden'));
+calendarModal.addEventListener('click', (e) => {
+    if (e.target === calendarModal) calendarModal.classList.add('hidden');
+});
+
+// カレンダー内の月移動
+calPrevBtn.addEventListener('click', () => {
+    calendarDisplayedMonth.setMonth(calendarDisplayedMonth.getMonth() - 1);
+    renderCalendar();
+});
+
+calNextBtn.addEventListener('click', () => {
+    calendarDisplayedMonth.setMonth(calendarDisplayedMonth.getMonth() + 1);
+    renderCalendar();
+});
+
+// カレンダーのスワイプ移動
+let calTouchStartX = 0;
+let calTouchEndX = 0;
+calendarModal.querySelector('.modal-content').addEventListener('touchstart', e => {
+    calTouchStartX = e.changedTouches[0].screenX;
+});
+calendarModal.querySelector('.modal-content').addEventListener('touchend', e => {
+    calTouchEndX = e.changedTouches[0].screenX;
+    handleSwipe(calTouchStartX, calTouchEndX, () => calPrevBtn.click(), () => calNextBtn.click());
+});
+
+// 詳細モーダルを閉じる
+closeDetailsBtn.addEventListener('click', () => detailsModal.classList.add('hidden'));
+detailsModal.addEventListener('click', (e) => {
+    if (e.target === detailsModal) detailsModal.classList.add('hidden');
+});
+
+function renderCalendar() {
+    const year = calendarDisplayedMonth.getFullYear();
+    const month = calendarDisplayedMonth.getMonth() + 1;
+    calMonthDisplay.innerText = `${year}年${month}月`;
+
+    calendarGrid.innerHTML = '';
+
+    const firstDay = new Date(year, month - 1, 1).getDay();
+    const daysInMonth = new Date(year, month, 0).getDate();
+
+    // 日付ごとの集計
+    const dailyData = {};
+    transactions.forEach(t => {
+        const d = new Date(t.date);
+        if (d.getFullYear() === year && (d.getMonth() + 1) === month) {
+            const day = d.getDate();
+            if (!dailyData[day]) dailyData[day] = { income: 0, expense: 0, count: 0 };
+            if (t.type === 'income') dailyData[day].income += t.amount;
+            if (t.type === 'expense') dailyData[day].expense += t.amount;
+            dailyData[day].count++;
+        }
+    });
+
+    // 空白セル
+    for (let i = 0; i < firstDay; i++) {
+        const cell = document.createElement('div');
+        cell.classList.add('cal-cell', 'empty');
+        calendarGrid.appendChild(cell);
+    }
+
+    // 日付セル
+    for (let day = 1; day <= daysInMonth; day++) {
+        const cell = document.createElement('div');
+        cell.classList.add('cal-cell');
+        
+        let summaryHtml = '';
+        if (dailyData[day]) {
+            if (dailyData[day].income > 0) summaryHtml += `<div class="cal-inc">+${dailyData[day].income.toLocaleString()}</div>`;
+            if (dailyData[day].expense > 0) summaryHtml += `<div class="cal-exp">-${dailyData[day].expense.toLocaleString()}</div>`;
+        }
+
+        cell.innerHTML = `
+            <div class="cal-date">${day}</div>
+            <div class="cal-summary">${summaryHtml}</div>
+        `;
+
+        if (dailyData[day]) {
+            cell.addEventListener('click', () => showDateDetails(year, month, day));
+        } else {
+            cell.style.cursor = 'default';
+        }
+
+        calendarGrid.appendChild(cell);
+    }
+}
+
+function showDateDetails(year, month, day) {
+    detailsDateTitle.innerText = `${year}年${month}月${day}日`;
+    
+    // 対象日のデータを抽出（逆順なのでそのまま表示すれば最新が上）
+    const targetTransactions = transactions.filter(t => {
+        const d = new Date(t.date);
+        return d.getFullYear() === year && (d.getMonth() + 1) === month && d.getDate() === day;
+    });
+
+    let totalInc = 0;
+    let totalExp = 0;
+    detailsTransactionList.innerHTML = '';
+
+    if (targetTransactions.length === 0) {
+        detailsTransactionList.innerHTML = '<p style="text-align:center; padding:1rem;">記録がありません</p>';
+    } else {
+        targetTransactions.forEach(t => {
+            if (t.type === 'income') totalInc += t.amount;
+            if (t.type === 'expense') totalExp += t.amount;
+
+            const sign = t.type === 'income' ? '+' : '-';
+            const item = document.createElement('li');
+            item.classList.add(t.type);
+            const memoHtml = t.memo ? ` <span class="memo">(${t.memo})</span>` : '';
+            const displayTitle = t.title ? t.title : '名称なし';
+
+            item.innerHTML = `
+                <div class="item-info">
+                    <span class="item-category">${displayTitle}</span>
+                    <span class="item-date-memo">${t.category}${memoHtml}</span>
+                </div>
+                <div class="item-amount ${t.type}">
+                    ${sign}${formatMoney(t.amount)}
+                </div>
+            `;
+            detailsTransactionList.appendChild(item);
+        });
+    }
+
+    detailsIncome.innerText = formatMoney(totalInc);
+    detailsExpense.innerText = formatMoney(totalExp);
+
+    detailsModal.classList.remove('hidden');
 }
