@@ -59,7 +59,7 @@
 
         <div class="content-grid">
             <section class="add-transaction glass-panel">
-                <h2>記録を追加</h2>
+                <h2>取引を追加</h2>
                 <form id="transaction-form">
                     <div class="form-group type-toggle">
                         <input type="radio" id="type-expense" name="type" value="expense" checked>
@@ -80,11 +80,6 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="amount">金額 (円)</label>
-                        <input type="number" id="amount" placeholder="例: 1000" required min="1" inputmode="numeric" pattern="[0-9]*">
-                    </div>
-
-                    <div class="form-group">
                         <label for="category">カテゴリー</label>
                         <select id="category" required>
                             <option value="カテゴリーなし" selected>カテゴリーなし</option>
@@ -100,6 +95,11 @@
                             <option value="教育">教育</option>
                             <option value="その他">その他</option>
                         </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="amount">金額 (円)</label>
+                        <input type="number" id="amount" placeholder="例: 1000" required min="1" inputmode="numeric" pattern="[0-9]*">
                     </div>
 
                     <div class="form-group">
@@ -132,6 +132,10 @@
                     <p>記録がありません</p>
                 </div>
             </section>
+        </div>
+
+        <div class="spreadsheet-link">
+            <a href="https://docs.google.com/spreadsheets/d/16I_uGCkiRyXWZdKZ4FZS8LwcMF9Dx4cm71at5IC-ito/edit?usp=sharing" target="_blank" rel="noopener noreferrer">スプレッドシートで確認・編集する</a>
         </div>
     </main>
 

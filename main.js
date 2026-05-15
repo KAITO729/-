@@ -1,6 +1,6 @@
 // ====== 設定 ======
 // ここにGASでデプロイしたWebアプリのURLを貼り付けてください
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbwJJf-AdBF2_YDN-ZRWszY8J2BYRJyOuNkIdCOkByP0OFc1Yp5eoClsuo_0iiOeuvuEyA/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbxQUn06H0B4HMVF0GhhBIHXXd8SwYRBqk2rg0ZaHj7kqELzxDGiGP-T6dn_rpa8JhVGQA/exec';
 
 // ====== DOM要素 ======
 const balanceEl = document.getElementById('total-balance');
@@ -46,12 +46,55 @@ displayedMonth.setDate(1); // 月の計算がずれないように1日に固定
 let incomeChartInstance = null;
 let expenseChartInstance = null;
 
+const expenseCategories = [
+    'カテゴリーなし', '食費', '日用品', '交通費', '健康・医療',
+    '趣味・娯楽', '衣服・美容', '交際費', '水道・光熱費', '通信費', '教育', 'その他'
+];
+
+const incomeCategories = [
+    'カテゴリーなし', '仕送り', 'バイト代', '奨学金', 'その他'
+];
+
+function updateCategoryOptions(type) {
+    const categories = type === 'expense' ? expenseCategories : incomeCategories;
+    categoryInput.innerHTML = '';
+    categories.forEach(cat => {
+        const option = document.createElement('option');
+        option.value = cat;
+        option.textContent = cat;
+        categoryInput.appendChild(option);
+    });
+    updateCategoryColor();
+}
+
+function updateCategoryColor() {
+    if (categoryInput.value === 'カテゴリーなし') {
+        categoryInput.classList.add('unselected');
+    } else {
+        categoryInput.classList.remove('unselected');
+    }
+}
+
 // ====== 初期化 ======
 document.addEventListener('DOMContentLoaded', () => {
     const today = new Date().toISOString().split('T')[0];
     dateInput.value = today;
     updateMonthDisplay();
+    updateCategoryColor();
     fetchTransactions();
+});
+
+// ====== イベントリスナー追加 ======
+amountInput.addEventListener('wheel', (e) => {
+    e.preventDefault();
+}, { passive: false });
+
+categoryInput.addEventListener('change', updateCategoryColor);
+
+document.querySelectorAll('input[name="type"]').forEach(radio => {
+    radio.addEventListener('change', (e) => {
+        updateCategoryOptions(e.target.value);
+    });
 });
 
 // ====== API通信 ======
@@ -165,7 +208,7 @@ function animateSwipe(element, direction, onComplete) {
         element.style.transition = 'transform 0.15s ease-out, opacity 0.15s ease-out';
         element.style.transform = `translateX(0)`;
         element.style.opacity = '1';
-        
+
         setTimeout(() => {
             isAnimating = false;
         }, 150);
@@ -191,7 +234,7 @@ function setupSwipeable(element, onSwipeLeft, onSwipeRight) {
 
     element.addEventListener('touchmove', e => {
         if (!isDragging || isAnimating) return;
-        
+
         const moveX = e.touches[0].clientX;
         const moveY = e.touches[0].clientY;
         const diffX = moveX - startX;
@@ -200,7 +243,7 @@ function setupSwipeable(element, onSwipeLeft, onSwipeRight) {
         if (isHorizontal === null) {
             if (Math.abs(diffX) > Math.abs(diffY)) {
                 isHorizontal = true;
-                e.preventDefault(); 
+                e.preventDefault();
             } else {
                 isHorizontal = false;
             }
@@ -237,7 +280,7 @@ function setupSwipeable(element, onSwipeLeft, onSwipeRight) {
 
 // ダッシュボードのスワイプ
 const dashboardContentEl = document.getElementById('dashboard-content');
-setupSwipeable(dashboardContentEl, 
+setupSwipeable(dashboardContentEl,
     () => { displayedMonth.setMonth(displayedMonth.getMonth() + 1); updateMonthDisplay(); render(); },
     () => { displayedMonth.setMonth(displayedMonth.getMonth() - 1); updateMonthDisplay(); render(); }
 );
@@ -337,6 +380,7 @@ form.addEventListener('submit', async (e) => {
         titleInput.value = '';
         memoInput.value = '';
         categoryInput.value = 'カテゴリーなし';
+        updateCategoryColor();
         amountInput.focus();
     } else {
         alert('保存に失敗しました。');
@@ -380,7 +424,7 @@ function addTransactionDOM(transaction) {
     const dayOfWeek = ['日', '月', '火', '水', '木', '金', '土'][dateObj.getDay()];
     const displayDate = typeof transaction.date === 'string' ? transaction.date.split('T')[0] : transaction.date;
     const formattedDate = displayDate.replace(/-/g, '/');
-    const dateWithDayAndCategory = `${formattedDate} (${dayOfWeek}) ${transaction.category}`;
+    const dateWithDay = `${formattedDate} (${dayOfWeek})`;
 
     const displayTitle = transaction.title ? transaction.title : '名称なし';
     const memoHtml = transaction.memo ? `<span class="item-memo">${transaction.memo}</span>` : '';
@@ -388,7 +432,8 @@ function addTransactionDOM(transaction) {
     item.innerHTML = `
         <div class="item-info">
             <span class="item-title">${displayTitle}</span>
-            <span class="item-date-category">${dateWithDayAndCategory}</span>
+            <span class="item-date">${dateWithDay}</span>
+            <span class="item-category">${transaction.category}</span>
             ${memoHtml}
         </div>
         <div class="item-amount ${transaction.type}">
@@ -449,7 +494,7 @@ function drawCharts(monthTransactions) {
             },
             tooltip: {
                 callbacks: {
-                    label: function(context) {
+                    label: function (context) {
                         if (context.parsed !== null) {
                             return context.parsed.toLocaleString('ja-JP') + '円';
                         }
@@ -484,7 +529,11 @@ function drawCharts(monthTransactions) {
         '通信費': '#0ea5e9',      // Sky Blue
         '教育': '#6366f1',       // Indigo
         'カテゴリーなし': '#475569', // Slate
-        'その他': '#94a3b8'       // Slate light
+        'その他': '#94a3b8',      // Slate light
+        // 収入用
+        '仕送り': '#10b981',      // Emerald
+        'バイト代': '#3b82f6',     // Blue
+        '奨学金': '#8b5cf6'       // Purple
     };
 
     const getColors = (dataObj) => {
@@ -610,8 +659,16 @@ function renderCalendar() {
 
         let summaryHtml = '';
         if (dailyData[day]) {
-            if (dailyData[day].income > 0) summaryHtml += `<div class="cal-inc">+${dailyData[day].income.toLocaleString()}</div>`;
-            if (dailyData[day].expense > 0) summaryHtml += `<div class="cal-exp">-${dailyData[day].expense.toLocaleString()}</div>`;
+            if (dailyData[day].income > 0) {
+                const incStr = `+${dailyData[day].income.toLocaleString()}`;
+                const sizeClass = incStr.length > 6 ? 'cal-small-text' : '';
+                summaryHtml += `<div class="cal-inc ${sizeClass}">${incStr}</div>`;
+            }
+            if (dailyData[day].expense > 0) {
+                const expStr = `-${dailyData[day].expense.toLocaleString()}`;
+                const sizeClass = expStr.length > 6 ? 'cal-small-text' : '';
+                summaryHtml += `<div class="cal-exp ${sizeClass}">${expStr}</div>`;
+            }
         }
 
         cell.innerHTML = `
@@ -660,7 +717,7 @@ function showDateDetails(year, month, day) {
             item.innerHTML = `
                 <div class="item-info">
                     <span class="item-title">${displayTitle}</span>
-                    <span class="item-date-category">${t.category}</span>
+                    <span class="item-category">${t.category}</span>
                     ${memoHtml}
                 </div>
                 <div class="item-amount ${t.type}">
