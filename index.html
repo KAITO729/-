@@ -76,7 +76,7 @@
 
                     <div class="form-group">
                         <label for="title">名称 (任意)</label>
-                        <input type="text" id="title" placeholder="例: レンタカー">
+                        <input type="text" id="title" placeholder="例: レンタカー" inputmode="text" lang="ja">
                     </div>
 
                     <div class="form-group">
@@ -104,7 +104,7 @@
 
                     <div class="form-group">
                         <label for="memo">メモ (任意)</label>
-                        <input type="text" id="memo" placeholder="例: 4人で割り勘">
+                        <input type="text" id="memo" placeholder="例: 4人で割り勘" inputmode="text" lang="ja">
                     </div>
 
                     <button type="submit" class="submit-btn">追加する</button>
@@ -149,9 +149,6 @@
                 <button id="close-calendar" class="close-btn">&times;</button>
             </div>
             <div id="calendar-swipe-wrapper">
-                <div class="calendar-grid-header">
-                    <div>日</div><div>月</div><div>火</div><div>水</div><div>木</div><div>金</div><div>土</div>
-                </div>
                 <div class="calendar-grid" id="calendar-grid">
                     <!-- 日付マスがここに生成される -->
                 </div>

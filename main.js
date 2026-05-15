@@ -629,6 +629,14 @@ function renderCalendar() {
 
     calendarGrid.innerHTML = '';
 
+    const daysOfWeek = ['日', '月', '火', '水', '木', '金', '土'];
+    daysOfWeek.forEach(day => {
+        const headerCell = document.createElement('div');
+        headerCell.classList.add('cal-header-cell');
+        headerCell.textContent = day;
+        calendarGrid.appendChild(headerCell);
+    });
+
     const firstDay = new Date(year, month - 1, 1).getDay();
     const daysInMonth = new Date(year, month, 0).getDate();
 
@@ -659,16 +667,8 @@ function renderCalendar() {
 
         let summaryHtml = '';
         if (dailyData[day]) {
-            if (dailyData[day].income > 0) {
-                const incStr = `+${dailyData[day].income.toLocaleString()}`;
-                const sizeClass = incStr.length > 6 ? 'cal-small-text' : '';
-                summaryHtml += `<div class="cal-inc ${sizeClass}">${incStr}</div>`;
-            }
-            if (dailyData[day].expense > 0) {
-                const expStr = `-${dailyData[day].expense.toLocaleString()}`;
-                const sizeClass = expStr.length > 6 ? 'cal-small-text' : '';
-                summaryHtml += `<div class="cal-exp ${sizeClass}">${expStr}</div>`;
-            }
+            if (dailyData[day].income > 0) summaryHtml += `<div class="cal-inc">+${dailyData[day].income.toLocaleString()}</div>`;
+            if (dailyData[day].expense > 0) summaryHtml += `<div class="cal-exp">-${dailyData[day].expense.toLocaleString()}</div>`;
         }
 
         cell.innerHTML = `
